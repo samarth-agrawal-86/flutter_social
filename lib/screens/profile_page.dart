@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_social/models/post.dart';
 import 'package:flutter_social/models/user.dart';
 import 'package:flutter_social/screens/home_page.dart';
+import 'package:flutter_social/widgets/cached_network_image.dart';
 import 'package:flutter_social/widgets/header.dart';
 import 'package:flutter_social/widgets/profile_widget.dart';
 import 'package:flutter_social/widgets/progress.dart';
@@ -24,6 +25,121 @@ class _ProfilePageState extends State<ProfilePage> {
   final String currentUserID = currentUser!.id;
   bool isLoading = false;
   int postsCount = 0;
+  String postOrientation = 'grid';
+
+  buildPostsLayout() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: postsCollection
+          .doc(currentUserID)
+          .collection('usersPosts')
+          .orderBy('timestamp', descending: true)
+          .snapshots(),
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgress();
+        }
+        // snapshot.data!.docs;
+
+        else if (snapshot.data == null) {
+          return Container();
+        } else if (postOrientation == 'grid') {
+          var postStream = snapshot.data!.docs
+              .map((DocumentSnapshot doc) => Post.fromDocument(doc));
+
+          var postList = postStream.toList();
+          //print(postList[1].getLikesCount(postList[2].likes));
+          postsCount = postList.length;
+          return Expanded(
+              child: GridView.builder(
+                  itemCount: postList.length,
+                  shrinkWrap: true,
+                  //physics: NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                      crossAxisCount: 3),
+                  itemBuilder: (context, index) {
+                    return GridTile(
+                      child: CachedNetworkImageFn(
+                        postUrl: postList[index].postUrl,
+                      ),
+                    );
+                  }));
+        } else if (postOrientation == 'list') {
+          var postStream = snapshot.data!.docs
+              .map((DocumentSnapshot doc) => Post.fromDocument(doc));
+
+          var postList = postStream.toList();
+          //print(postList[1].getLikesCount(postList[2].likes));
+          postsCount = postList.length;
+          return Expanded(
+            child: ListView.builder(
+                scrollDirection: Axis.vertical,
+                itemCount: postList.length,
+                itemBuilder: (context, index) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        leading: CircleAvatar(
+                          radius: 20,
+                          backgroundImage: NetworkImage(currentUser!.photoUrl),
+                          backgroundColor: Colors.grey,
+                        ),
+                        // TODO: add gesture detector here so that we can show profile later
+                        title: Text(currentUser!.displayName),
+                        subtitle: Text(postList[index].location.toString()),
+                        trailing: IconButton(
+                            onPressed: () {}, icon: Icon(Icons.more_vert)),
+                      ),
+                      // TODO: add clickable feature on the image as well
+                      Container(
+                        height: 300,
+                        child: Center(
+                          child: CachedNetworkImageFn(
+                            postUrl: postList[index].postUrl,
+                          ),
+                        ),
+                      ),
+
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {},
+                            icon: Icon(
+                              Icons.favorite_border,
+                              size: 28,
+                              color: Colors.pink,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {},
+                            icon: Icon(Icons.comment_rounded,
+                                size: 28, color: Colors.blue.shade900),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Text(
+                            '${postList[index].getLikesCount(postList[index].likes)} likes',
+                            textAlign: TextAlign.left),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Text('${postList[index].username} comments',
+                            textAlign: TextAlign.left),
+                      ),
+                    ],
+                  );
+                }),
+          );
+        }
+        return Container();
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,102 +253,35 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             },
           ),
-          Container(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: postsCollection
-                  .doc(currentUserID)
-                  .collection('usersPosts')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgress();
-                }
-                // snapshot.data!.docs;
-                var postStream = snapshot.data!.docs
-                    .map((DocumentSnapshot doc) => Post.fromDocument(doc));
-
-                var postList = postStream.toList();
-                //print(postList[1].getLikesCount(postList[2].likes));
-                postsCount = postList.length;
-
-                return Expanded(
-                  child: ListView.builder(
-                      scrollDirection: Axis.vertical,
-                      itemCount: postList.length,
-                      itemBuilder: (context, index) {
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ListTile(
-                              leading: CircleAvatar(
-                                radius: 20,
-                                backgroundImage:
-                                    NetworkImage(currentUser!.photoUrl),
-                                backgroundColor: Colors.grey,
-                              ),
-                              // TODO: add gesture detector here so that we can show profile later
-                              title: Text(currentUser!.displayName),
-                              subtitle:
-                                  Text(postList[index].location.toString()),
-                              trailing: IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.more_vert)),
-                            ),
-                            // TODO: add clickable feature on the image as well
-                            Container(
-                                height: 300,
-                                child: Center(
-                                  child: cni.CachedNetworkImage(
-                                    imageUrl: postList[index].postUrl,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        Container(color: Colors.black38),
-                                    errorWidget: (context, url, error) =>
-                                        Icon(Icons.error, color: Colors.red),
-                                  ),
-                                )
-                                //image: NetworkImage(postList[index].postUrl),
-                                //fit: BoxFit.cover,
-                                ),
-
-                            Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(
-                                    Icons.favorite_border,
-                                    size: 28,
-                                    color: Colors.pink,
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.comment_rounded,
-                                      size: 28, color: Colors.blue.shade900),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 16.0),
-                              child: Text(
-                                  '${postList[index].getLikesCount(postList[index].likes)} likes',
-                                  textAlign: TextAlign.left),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 16.0),
-                              child: Text(
-                                  '${postList[index].username} comments',
-                                  textAlign: TextAlign.left),
-                            ),
-                          ],
-                        );
-                      }),
-                );
-              },
-            ),
-          )
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                  onPressed: () {
+                    setState(() {
+                      postOrientation = 'grid';
+                    });
+                  },
+                  icon: Icon(
+                    Icons.grid_on,
+                    color:
+                        postOrientation == 'grid' ? Colors.purple : Colors.grey,
+                  )),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    postOrientation = 'list';
+                  });
+                },
+                icon: Icon(
+                  Icons.list,
+                  color:
+                      postOrientation == 'list' ? Colors.purple : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          buildPostsLayout(),
         ],
       ),
     );
