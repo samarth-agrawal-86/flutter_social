@@ -183,13 +183,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             // TODO: add clickable feature on the image as well
                             Container(
                                 height: 300,
-                                child: cni.CachedNetworkImage(
-                                  imageUrl: postList[index].postUrl,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      Container(color: Colors.black54),
-                                  errorWidget: (context, url, error) =>
-                                      Icon(Icons.error, color: Colors.red),
+                                child: Center(
+                                  child: cni.CachedNetworkImage(
+                                    imageUrl: postList[index].postUrl,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) =>
+                                        Container(color: Colors.black38),
+                                    errorWidget: (context, url, error) =>
+                                        Icon(Icons.error, color: Colors.red),
+                                  ),
                                 )
                                 //image: NetworkImage(postList[index].postUrl),
                                 //fit: BoxFit.cover,
