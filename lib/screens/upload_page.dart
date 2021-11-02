@@ -1,18 +1,18 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_constructors_in_immutables, avoid_print
-
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
-import 'home_page.dart';
 import 'package:flutter/material.dart';
+
+import 'dart:io' as io;
+import 'package:geolocator/geolocator.dart' as geoloc;
+import 'package:geocoding/geocoding.dart' as geocoding;
+import 'package:flutter_svg/flutter_svg.dart' as svg;
+import 'package:image_picker/image_picker.dart' as img_picker;
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:image/image.dart' as im;
+import 'package:uuid/uuid.dart' as uuid;
+
+import 'package:flutter_social/screens/home_page.dart';
 import 'package:flutter_social/models/user.dart';
 import 'package:flutter_social/widgets/progress.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:image/image.dart' as im;
-import 'package:uuid/uuid.dart';
 
 class UploadPage extends StatefulWidget {
   final User? currentUser;
@@ -23,35 +23,36 @@ class UploadPage extends StatefulWidget {
 }
 
 class _UploadPageState extends State<UploadPage> {
-  File? postFile;
+  io.File? postFile;
   bool isUploading = false;
-  final picker = ImagePicker();
-  String postId = Uuid().v4();
+  final picker = img_picker.ImagePicker();
+  String postId = uuid.Uuid().v4();
   TextEditingController captionController = TextEditingController();
   TextEditingController locationController = TextEditingController();
 
   handleTakePicture() async {
     Navigator.pop(context);
     var image = await picker.pickImage(
-      source: ImageSource.camera,
+      source: img_picker.ImageSource.camera,
       maxHeight: 675,
       maxWidth: 960,
     );
 
     setState(() {
-      postFile = File(image!.path);
+      postFile = io.File(image!.path);
     });
   }
 
   handleUploadPicture() async {
     Navigator.pop(context);
-    var image = await picker.pickImage(source: ImageSource.gallery);
+    var image = await picker.pickImage(
+      source: img_picker.ImageSource.gallery,
+    );
     if (image == null) {
       return CircularProgress();
-    }
-    if (image != null) {
+    } else {
       setState(() {
-        postFile = File(image.path);
+        postFile = io.File(image.path);
       });
     }
   }
@@ -63,12 +64,12 @@ class _UploadPageState extends State<UploadPage> {
     });
 
     // compress image
-    final tempDir = await getTemporaryDirectory();
+    final tempDir = await path_provider.getTemporaryDirectory();
     final path = tempDir.path;
 
     im.Image? imageFile = im.decodeImage(postFile!.readAsBytesSync());
 
-    final compressedImageFile = File('$path/img_$postId.jpg')
+    final compressedImageFile = io.File('$path/img_$postId.jpg')
       ..writeAsBytesSync(im.encodeJpg(imageFile!, quality: 85));
 
     setState(() {
@@ -106,7 +107,7 @@ class _UploadPageState extends State<UploadPage> {
     setState(() {
       postFile = null;
       isUploading = false;
-      postId = Uuid().v4();
+      postId = uuid.Uuid().v4();
     });
   }
 
@@ -116,7 +117,7 @@ class _UploadPageState extends State<UploadPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(
+          svg.SvgPicture.asset(
             "assets/images/upload.svg",
             height: 260,
           ),
@@ -260,12 +261,14 @@ class _UploadPageState extends State<UploadPage> {
             padding: EdgeInsets.symmetric(horizontal: 60),
             child: TextButton.icon(
               onPressed: () async {
-                Position position = await Geolocator.getCurrentPosition(
-                    desiredAccuracy: LocationAccuracy.high);
+                geoloc.Position position =
+                    await geoloc.Geolocator.getCurrentPosition(
+                        desiredAccuracy: geoloc.LocationAccuracy.high);
 
-                List<Placemark> placemarks = await placemarkFromCoordinates(
-                    position.latitude, position.longitude);
-                Placemark placemark = placemarks[0];
+                List<geocoding.Placemark> placemarks =
+                    await geocoding.placemarkFromCoordinates(
+                        position.latitude, position.longitude);
+                geocoding.Placemark placemark = placemarks[0];
                 print('Placemarks');
                 print('------------');
                 print(placemarks);

@@ -1,5 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:cloud_firestore/cloud_firestore.dart' as fb_firestore;
+import 'package:firebase_storage/firebase_storage.dart' as fb_storage;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_social/models/user.dart';
@@ -14,14 +14,13 @@ import 'create_account_page.dart';
 import 'package:flutter/services.dart';
 
 final GoogleSignIn googleSignIn = GoogleSignIn();
-final CollectionReference usersCollection =
-    FirebaseFirestore.instance.collection('users');
-final CollectionReference postsCollection =
-    FirebaseFirestore.instance.collection('posts');
+final fb_firestore.CollectionReference usersCollection =
+    fb_firestore.FirebaseFirestore.instance.collection('users');
+final fb_firestore.CollectionReference postsCollection =
+    fb_firestore.FirebaseFirestore.instance.collection('posts');
 final DateTime timestampVar = DateTime.now();
 User? currentUser;
-firebase_storage.Reference storageRef =
-    firebase_storage.FirebaseStorage.instance.ref();
+fb_storage.Reference storageRef = fb_storage.FirebaseStorage.instance.ref();
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -55,12 +54,17 @@ class _HomePageState extends State<HomePage> {
   createUserInFirestore() async {
     // 1. check if user already exists in database according to id
     final GoogleSignInAccount? user = googleSignIn.currentUser;
-    DocumentSnapshot doc = await usersCollection.doc(user!.id).get();
+    fb_firestore.DocumentSnapshot doc =
+        await usersCollection.doc(user!.id).get();
 
     // 2. if user doesn't exists then then take them to create account page
     if (!doc.exists) {
-      final username = await Navigator.push(context,
-          MaterialPageRoute(builder: (context) => CreateAccountPage()));
+      final username = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CreateAccountPage(),
+        ),
+      );
 
       // 3. get username from create account, use it to make new user document in users collection
       usersCollection.doc(user.id).set({
@@ -75,7 +79,10 @@ class _HomePageState extends State<HomePage> {
 
       doc = await usersCollection.doc(user.id).get();
     }
+    // pulling user data from firestore and deserializing it
     currentUser = User.fromDocument(doc);
+    //print(currentUser);
+    //print(currentUser!.username);
   }
 
   @override
@@ -123,7 +130,7 @@ class _HomePageState extends State<HomePage> {
           ActivityFeed(),
           UploadPage(currentUser: currentUser),
           SearchPage(),
-          ProfilePage(currentUser: currentUser),
+          ProfilePage(profileId: currentUser!.id),
         ],
       ),
       bottomNavigationBar: CupertinoTabBar(

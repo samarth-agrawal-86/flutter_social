@@ -44,15 +44,21 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   labelText: 'Username',
                   border: OutlineInputBorder(),
                 ),
-                onSaved: (String? value) {},
-                autovalidate: true,
+                onSaved: (String? value) {
+                  usernameController.text = value!;
+                },
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                //autovalidate: true,
                 validator: (String? value) {
-                  if (value!.trim().length < 3 || value.isEmpty) {
+                  if (value == null) {
+                    return 'username can\'t be empty';
+                  } else if (value.trim().length < 3) {
                     return 'Username too short';
                   } else if (value.trim().length > 12) {
                     return 'Username too long';
-                  } else
+                  } else {
                     return null;
+                  }
                 },
               ),
             ),
@@ -64,11 +70,16 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 form.save();
 
                 final snackBar = SnackBar(
-                    content: Text('Welcome ${usernameController.text}'));
+                  content: Text('Welcome ${usernameController.text}'),
+                );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                Timer(Duration(seconds: 1), () {
-                  Navigator.pop(context, usernameController.text);
-                });
+
+                Timer(
+                  Duration(seconds: 1),
+                  () {
+                    Navigator.pop(context, usernameController.text);
+                  },
+                );
               }
             },
             child: Container(

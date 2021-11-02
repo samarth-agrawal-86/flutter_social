@@ -1,18 +1,19 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
-import 'dart:async';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart' as cni;
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter_social/models/user.dart';
+import 'package:flutter_social/widgets/cached_network_image.dart';
 import 'package:flutter_social/widgets/progress.dart';
 
 import 'home_page.dart';
 
 class EditProfilePage extends StatefulWidget {
-  final String currentUserID;
+  final String currentUserId;
 
-  const EditProfilePage({Key? key, required this.currentUserID})
+  const EditProfilePage({Key? key, required this.currentUserId})
       : super(key: key);
 
   @override
@@ -29,7 +30,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getUser();
   }
@@ -39,7 +39,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       isLoading = true;
     });
     DocumentSnapshot doc =
-        await usersCollection.doc(widget.currentUserID).get();
+        await usersCollection.doc(widget.currentUserId).get();
     user = User.fromDocument(doc);
     _displayNameController.text = user!.displayName;
     _bioController.text = user!.bio as String;
@@ -81,7 +81,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       CircleAvatar(
                         radius: 40.0,
                         backgroundColor: Colors.orange,
-                        backgroundImage: NetworkImage(user!.photoUrl),
+                        backgroundImage:
+                            cni.CachedNetworkImageProvider(user!.photoUrl),
                       ),
                       SizedBox(height: 24),
                       TextField(
