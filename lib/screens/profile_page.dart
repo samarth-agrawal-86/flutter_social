@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart' as fb_firestore;
 import 'package:cached_network_image/cached_network_image.dart' as cni;
+import 'package:flutter_svg/flutter_svg.dart' as svg;
 import 'package:flutter_social/models/post.dart';
 import 'package:flutter_social/models/user.dart';
 import 'package:flutter_social/screens/edit_profile_page.dart';
 import 'package:flutter_social/screens/home_page.dart';
 import 'package:flutter_social/widgets/cached_network_image.dart';
 import 'package:flutter_social/widgets/header.dart';
+import 'package:flutter_social/widgets/post_tile.dart';
 import 'package:flutter_social/widgets/profile_widget.dart';
 import 'package:flutter_social/widgets/progress.dart';
 
@@ -196,12 +198,48 @@ class _ProfilePageState extends State<ProfilePage> {
   buildProfilePosts() {
     if (isLoading) {
       return CircularProgress();
-    } else {
+    } else if (posts.isEmpty) {
+      return Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            svg.SvgPicture.asset(
+              "assets/images/no_content.svg",
+              height: 260,
+            ),
+            SizedBox(height: 40),
+            Text(
+              'No Posts',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 40.0,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          ],
+        ),
+      );
+    } else if (postOrientation == 'list') {
+      return Column(
+        children: posts,
+      );
+    } else if (postOrientation == 'grid') {
+      List<GridTile> gridTiles = [];
       for (Post post in posts) {
-        return Column(
-          children: posts,
+        gridTiles.add(
+          GridTile(
+            child: PostTile(post: post),
+          ),
         );
       }
+      return GridView.count(
+          crossAxisCount: 3,
+          childAspectRatio: 1.0,
+          mainAxisSpacing: 1.5,
+          crossAxisSpacing: 1.5,
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          children: gridTiles);
     }
   }
 

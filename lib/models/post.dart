@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart' as cni;
 import 'package:flutter/material.dart';
 import 'package:flutter_social/models/user.dart';
 import 'package:flutter_social/screens/home_page.dart';
+import 'package:flutter_social/widgets/cached_network_image.dart';
 import 'package:flutter_social/widgets/progress.dart';
 
 // Here's the benefit of including a model along with the widget.
@@ -130,11 +131,8 @@ class _PostState extends State<Post> {
   buildPostImage() {
     return Center(
       child: Container(
+        child: CachedNetworkImageFn(postUrl: postUrl!),
         height: 250,
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: cni.CachedNetworkImageProvider(postUrl!),
-                fit: BoxFit.cover)),
       ),
     );
   }
