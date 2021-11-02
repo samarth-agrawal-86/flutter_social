@@ -11,7 +11,6 @@ import 'package:flutter_social/screens/upload_page.dart';
 import 'package:flutter_social/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'create_account_page.dart';
-import 'package:flutter/services.dart';
 
 final GoogleSignIn googleSignIn = GoogleSignIn();
 final fb_firestore.CollectionReference usersCollection =

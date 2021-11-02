@@ -25,6 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final String currentUserId = currentUser!.id;
   bool isLoading = false;
   int postsCount = 0;
+  List<Post> posts = [];
   int following = 0;
   int followers = 0;
   String postOrientation = 'grid';
@@ -168,6 +169,42 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  getProfilePosts() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    fb_firestore.QuerySnapshot snapshot = await postsCollection
+        .doc(widget.profileId)
+        .collection('usersPosts')
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    setState(() {
+      isLoading = false;
+      postsCount = snapshot.docs.length;
+      posts = snapshot.docs.map((doc) => Post.fromDocument(doc)).toList();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getProfilePosts();
+  }
+
+  buildProfilePosts() {
+    if (isLoading) {
+      return CircularProgress();
+    } else {
+      for (Post post in posts) {
+        return Column(
+          children: posts,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -175,7 +212,6 @@ class _ProfilePageState extends State<ProfilePage> {
       body: ListView(
         children: [
           buildProfileHeader(),
-          //Divider(thickness: 1, color: Colors.grey.shade300),
           Container(height: 2, color: Colors.grey.shade200),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -212,7 +248,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
           Container(height: 2, color: Colors.grey.shade200),
-          //Divider(thickness: 1, color: Colors.grey.shade300),
+          Divider(
+            height: 0.0,
+          ),
+          buildProfilePosts(),
         ],
       ),
     );
