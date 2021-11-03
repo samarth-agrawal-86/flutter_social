@@ -84,8 +84,9 @@ class _PostState extends State<Post> {
   final String? location;
   final Map? likes;
   final DateTime? timestamp;
-  final int? likesCount;
-
+  int? likesCount;
+  final String currentUserId = currentUser!.id;
+  bool _isLiked = false;
   _PostState({
     this.postId,
     this.postUrl,
@@ -97,7 +98,36 @@ class _PostState extends State<Post> {
     this.timestamp,
     this.likesCount,
   });
-  bool _isLiked = false;
+
+  handleLikePost() {
+    _isLiked = (likes![currentUserId] == true);
+
+    if (_isLiked == true) {
+      setState(() {
+        _isLiked == false;
+        likesCount = likesCount! - 1;
+        likes![currentUserId] = false;
+
+        postsCollection
+            .doc(ownerId!)
+            .collection('usersPosts')
+            .doc(postId)
+            .update({'likes[$currentUserId]': false});
+      });
+    } else if (_isLiked == false) {
+      setState(() {
+        _isLiked == true;
+        likesCount = likesCount! + 1;
+        likes![currentUserId] = true;
+
+        postsCollection
+            .doc(ownerId!)
+            .collection('usersPosts')
+            .doc(postId)
+            .update({'likes[$currentUserId]': true});
+      });
+    }
+  }
 
   buildPostHeader() {
     return FutureBuilder<fb_firestore.DocumentSnapshot>(
@@ -130,9 +160,12 @@ class _PostState extends State<Post> {
 
   buildPostImage() {
     return Center(
-      child: Container(
-        child: CachedNetworkImageFn(postUrl: postUrl!),
-        height: 250,
+      child: GestureDetector(
+        onTap: handleLikePost,
+        child: Container(
+          child: CachedNetworkImageFn(postUrl: postUrl!),
+          height: 250,
+        ),
       ),
     );
   }
@@ -146,9 +179,9 @@ class _PostState extends State<Post> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             IconButton(
-              onPressed: () {},
+              onPressed: handleLikePost,
               icon: Icon(
-                Icons.favorite_border,
+                _isLiked ? Icons.favorite : Icons.favorite_border,
                 size: 28,
                 color: Colors.pink,
               ),

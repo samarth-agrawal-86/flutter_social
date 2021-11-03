@@ -5,7 +5,7 @@ import 'dart:io' as io;
 import 'package:geolocator/geolocator.dart' as geoloc;
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:flutter_svg/flutter_svg.dart' as svg;
-import 'package:image_picker/image_picker.dart' as img_picker;
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:image/image.dart' as im;
 import 'package:uuid/uuid.dart' as uuid;
@@ -25,7 +25,7 @@ class UploadPage extends StatefulWidget {
 class _UploadPageState extends State<UploadPage> {
   io.File? postFile;
   bool isUploading = false;
-  final picker = img_picker.ImagePicker();
+  final picker = ImagePicker();
   String postId = uuid.Uuid().v4();
   TextEditingController captionController = TextEditingController();
   TextEditingController locationController = TextEditingController();
@@ -33,7 +33,7 @@ class _UploadPageState extends State<UploadPage> {
   handleTakePicture() async {
     Navigator.pop(context);
     var image = await picker.pickImage(
-      source: img_picker.ImageSource.camera,
+      source: ImageSource.camera,
       maxHeight: 675,
       maxWidth: 960,
     );
@@ -45,9 +45,12 @@ class _UploadPageState extends State<UploadPage> {
 
   handleUploadPicture() async {
     Navigator.pop(context);
+    print('over here');
     var image = await picker.pickImage(
-      source: img_picker.ImageSource.gallery,
+      source: ImageSource.gallery,
     );
+    print('now here');
+    print(image!.path);
     if (image == null) {
       return CircularProgress();
     } else {
